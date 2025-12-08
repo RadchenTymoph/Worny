@@ -1,11 +1,8 @@
 mod save;
-use save::{SaveData, load_save, save};
-
-use std::arch::x86_64::_mm256_stream_pd;
+use save::{load_save, save};
 use macroquad::prelude::*;
 use ::rand;
 use ::rand::Rng;
-use macroquad::audio::play_sound;
 
 #[derive(PartialEq, Eq)]
 enum Direction {
