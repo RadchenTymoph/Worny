@@ -4,6 +4,7 @@ use macroquad::prelude::*;
 use ::rand;
 use ::rand::Rng;
 
+
 #[derive(PartialEq, Eq)]
 enum Direction {
     Up,
@@ -11,6 +12,7 @@ enum Direction {
     Left,
     Right,
 }
+
 #[derive(PartialEq, Eq)]
 enum Status {
     Continuing,
@@ -18,29 +20,17 @@ enum Status {
     Failed,
 }
 
+
 struct Player {
     x: f32,
     y: f32,
     radius: f32,
     color: Color,
-}
-
-struct Goal {
-    x: f32,
-    y: f32,
-    radius: f32,
-    color: Color,
-    existing: bool,
-}
-struct Rope {
-    x: f32,
-    y: f32,
-    radius: f32,
-    color: Color,
     existing: bool,
 }
 
-impl Goal {
+
+impl Player {
     fn draw(&self) {
         if self.existing {
             draw_circle(self.x, self.y, self.radius, self.color);
@@ -56,14 +46,16 @@ async fn main() {
         y: 0.0,
         radius: 4.0,
         color: WHITE,
+        existing: true,
     };
     let mut special = Player {
         x: 0.0,
         y: 0.0,
         radius: 4.0,
         color: RED,
+        existing: true,
     };
-    let mut goal = Goal {
+    let mut goal = Player {
         x: rand::rng().random_range(0.0..screen_width() - 40.0),
         y: rand::rng().random_range(0.0..screen_height() - 40.0),
         radius: 15.0,
@@ -72,7 +64,7 @@ async fn main() {
     };
 
     //let mut balast: Vec<Rope> = Vec::new();
-    let mut ropes: Vec<Rope> = Vec::new();
+    let mut ropes: Vec<Player> = Vec::new();
 
 
     let mut dir = Direction::Right;
@@ -132,11 +124,11 @@ async fn main() {
                 }
             }
             for rope in &ropes {
-                draw_circle(rope.x, rope.y, rope.radius, rope.color);
+                rope.draw();
             }
-            draw_circle(player.x, player.y, player.radius, player.color);
+            player.draw();
             if history.len() >= 10 {
-                draw_circle(special.x, special.y, special.radius, special.color);
+                special.draw()
             }
             draw_text(&score.to_string(), 20.0, 60.0, 30.0, WHITE);
             draw_text(&saved.to_string(), 20.0, 20.0, 30.0, WHITE);
@@ -184,14 +176,14 @@ async fn main() {
     }
 }
 
-fn on_collision(player: &Player, goal: &Goal) -> bool {
+fn on_collision(player: &Player, goal: &Player) -> bool {
     let dx = player.x - goal.x;
     let dy = player.y - goal.y;
     let distance = (dx*dx + dy*dy).sqrt();
 
     distance < (player.radius + goal.radius)
 }
-fn touches(player: &Player, ropes: & Vec<Rope>) -> bool {
+fn touches(player: &Player, ropes: & Vec<Player>) -> bool {
     for rope in ropes {
         let dx = player.x - rope.x;
         let dy = player.y - rope.y;
@@ -270,9 +262,9 @@ fn change_position(player: &mut Player, dir: &mut Direction) {
     player.x = player.x.clamp(player.radius, screen_width() - player.radius);
     player.y = player.y.clamp(player.radius, screen_height() - player.radius);
 }
-fn add_rope(ropes: &mut Vec<Rope>, player: &Player) {
+fn add_rope(ropes: &mut Vec<Player>, player: &Player) {
     for _ in 0..5 {
-        ropes.push(Rope {
+        ropes.push(Player {
             x: player.x,
             y: player.y,
             radius: player.radius,
