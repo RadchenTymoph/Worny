@@ -13,6 +13,7 @@ enum Direction {
     Right,
 }
 
+
 #[derive(PartialEq, Eq)]
 enum Status {
     Continuing,
@@ -38,6 +39,7 @@ impl Player {
     }
 }
 
+
 #[macroquad::main("BasicShapes")]
 async fn main() {
 
@@ -62,20 +64,21 @@ async fn main() {
         color: GREEN,
         existing: true,
     };
-
     //let mut balast: Vec<Rope> = Vec::new();
     let mut ropes: Vec<Player> = Vec::new();
-
 
     let mut dir = Direction::Right;
 
     let mut history: Vec<(f32, f32)> = Vec::new();
+
     let mut other_history: Vec<(f32, f32)> = Vec::new();
     //add_rope(&mut balast, &player);
-
     let mut timer = 0;
+
     let mut status = Status::Continuing;
+
     let mut saved = load_save("save.json");
+
     let mut score = 0.0;
 
 
@@ -116,15 +119,15 @@ async fn main() {
                 timer = 0;
             }
 
-            for (i, rope) in ropes.iter_mut().enumerate() {
+            for (i, player) in ropes.iter_mut().enumerate() {
                 let delay = 10 * (i + 1);
                 if other_history.len() > delay {
-                    rope.x = other_history[other_history.len() - delay].0;
-                    rope.y = other_history[other_history.len() - delay].1;
+                    player.x = other_history[other_history.len() - delay].0;
+                    player.y = other_history[other_history.len() - delay].1;
                 }
             }
-            for rope in &ropes {
-                rope.draw();
+            for player in &ropes {
+                player.draw();
             }
             player.draw();
             if history.len() >= 10 {
@@ -197,7 +200,6 @@ fn touches(player: &Player, ropes: & Vec<Player>) -> bool {
     false
 }
 
-
 fn sprint(player: &mut Player, dir: &mut Direction) {
     if is_key_pressed(KeyCode::W) && *dir != Direction::Up{
         *dir = Direction::Down;
@@ -230,6 +232,7 @@ fn sprint(player: &mut Player, dir: &mut Direction) {
     player.x = player.x.clamp(player.radius, screen_width() - player.radius);
     player.y = player.y.clamp(player.radius, screen_height() - player.radius);
 }
+
 fn change_position(player: &mut Player, dir: &mut Direction) {
     if is_key_pressed(KeyCode::W) && *dir != Direction::Up{
         *dir = Direction::Down;
@@ -262,6 +265,7 @@ fn change_position(player: &mut Player, dir: &mut Direction) {
     player.x = player.x.clamp(player.radius, screen_width() - player.radius);
     player.y = player.y.clamp(player.radius, screen_height() - player.radius);
 }
+
 fn add_rope(ropes: &mut Vec<Player>, player: &Player) {
     for _ in 0..5 {
         ropes.push(Player {
