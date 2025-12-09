@@ -28,6 +28,15 @@ struct Player {
     radius: f32,
     color: Color,
     existing: bool,
+    history: Vec<(f32, f32)>,
+}
+
+
+struct Rope {
+    x: f32,
+    y: f32,
+    radius: f32,
+    color: Color,
 }
 
 
@@ -40,6 +49,12 @@ impl Player {
 }
 
 
+impl Rope {
+    fn draw(&self) {
+        draw_circle(self.x, self.y, self.radius, self.color)
+    }
+}
+
 #[macroquad::main("BasicShapes")]
 async fn main() {
 
@@ -49,6 +64,7 @@ async fn main() {
         radius: 4.0,
         color: WHITE,
         existing: true,
+        history: Vec::new(),
     };
     let mut special = Player {
         x: 0.0,
@@ -56,6 +72,7 @@ async fn main() {
         radius: 4.0,
         color: RED,
         existing: true,
+        history: Vec::new(),
     };
     let mut goal = Player {
         x: rand::rng().random_range(0.0..screen_width() - 40.0),
@@ -63,15 +80,16 @@ async fn main() {
         radius: 15.0,
         color: GREEN,
         existing: true,
+        history: Vec::new(),
     };
     //let mut balast: Vec<Rope> = Vec::new();
-    let mut ropes: Vec<Player> = Vec::new();
+    let mut ropes: Vec<Rope> = Vec::new();
 
     let mut dir = Direction::Right;
 
-    let mut history: Vec<(f32, f32)> = Vec::new();
+    //let mut history: Vec<(f32, f32)> = Vec::new();
 
-    let mut other_history: Vec<(f32, f32)> = Vec::new();
+    //let mut other_history: Vec<(f32, f32)> = Vec::new();
     //add_rope(&mut balast, &player);
     let mut timer = 0;
 
@@ -85,12 +103,12 @@ async fn main() {
     loop {
         clear_background(BLACK);
         if status == Status::Continuing {
-            history.push((player.x, player.y));
-            if history.len() >= 10 {
-                if let Some(&(x, y)) = history.get(history.len() - 10) {
+            player.history.push((player.x, player.y));
+            if player.history.len() >= 10 {
+                if let Some(&(x, y)) = player.history.get(player.history.len() - 10) {
                     special.x = x;
                     special.y = y;
-                    other_history.push((x, y));
+                    special.history.push((x, y));
                 }
             }
             if is_key_down(KeyCode::LeftShift) {
@@ -119,18 +137,18 @@ async fn main() {
                 timer = 0;
             }
 
-            for (i, player) in ropes.iter_mut().enumerate() {
+            for (i, rope) in ropes.iter_mut().enumerate() {
                 let delay = 10 * (i + 1);
-                if other_history.len() > delay {
-                    player.x = other_history[other_history.len() - delay].0;
-                    player.y = other_history[other_history.len() - delay].1;
+                if special.history.len() > delay {
+                    rope.x = special.history[special.history.len() - delay].0;
+                    rope.y = special.history[special.history.len() - delay].1;
                 }
             }
-            for player in &ropes {
-                player.draw();
+            for rope in &ropes {
+                rope.draw();
             }
             player.draw();
-            if history.len() >= 10 {
+            if player.history.len() >= 10 {
                 special.draw()
             }
             draw_text(&score.to_string(), 20.0, 60.0, 30.0, WHITE);
@@ -164,7 +182,7 @@ async fn main() {
             }
             if is_key_pressed(KeyCode::F) {
                 ropes.clear();
-                history.clear();
+                player.history.clear();
                 player.x = 0.0;
                 player.y = 0.0;
                 status = Status::Continuing;
@@ -186,7 +204,7 @@ fn on_collision(player: &Player, goal: &Player) -> bool {
 
     distance < (player.radius + goal.radius)
 }
-fn touches(player: &Player, ropes: & Vec<Player>) -> bool {
+fn touches(player: &Player, ropes: & Vec<Rope>) -> bool {
     for rope in ropes {
         let dx = player.x - rope.x;
         let dy = player.y - rope.y;
@@ -266,14 +284,13 @@ fn change_position(player: &mut Player, dir: &mut Direction) {
     player.y = player.y.clamp(player.radius, screen_height() - player.radius);
 }
 
-fn add_rope(ropes: &mut Vec<Player>, player: &Player) {
+fn add_rope(ropes: &mut Vec<Rope>, player: &Player) {
     for _ in 0..5 {
-        ropes.push(Player {
+        ropes.push(Rope {
             x: player.x,
             y: player.y,
             radius: player.radius,
             color: WHITE,
-            existing: true,
         });
     }
 }
